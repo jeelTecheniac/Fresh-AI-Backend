@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Enforce: type[(scope)]!?: message (Conventional-like types)
+echo "🔎 Validating commit message format..."
+echo "$COMMIT_MSG" | grep -E '^(feat|fix|bug|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]+\))?(!)?:\s.+' > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+  echo "❌ Invalid commit message format."
+  echo ""
+  echo "Expected: <type>[(scope)]!: <message>"
+  echo "Where <type> is one of:" 
+  echo "  feat | fix | bug | chore | docs | style | refactor | perf | test | build | ci | revert"
+  echo "(scope) is optional; add ! for breaking changes"
+  echo ""
+  echo "Examples:"
+  echo "  feat: implement login API"
+  echo "  fix: handle null token in auth middleware"
+  echo "  bug: correct user pagination count"
+  echo "  chore: bump dependencies"
+  echo "  docs(readme): add setup instructions"
+  echo "  refactor(auth): simplify token parser"
+  echo "  perf(api)!: cache heavy endpoint responses"
+  echo ""
+  echo "Your message was:"
+  echo "---"
+  echo "$COMMIT_MSG"
+  echo "---"
+  exit 1
+fi
+
+echo "✅ Commit message format looks good!"
+
+

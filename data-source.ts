@@ -1,6 +1,9 @@
 import { DataSource } from "typeorm";
 import { config, dbConfig, isDevelopment } from "./src/config/index.js";
 import { User } from "./src/entities/User.js";
+import { Role } from "./src/entities/Role.js";
+import { Token } from "./src/entities/Token.js";
+import { UserLimit } from "./src/entities/UserLimit.js";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -11,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: dbConfig.database,
   synchronize: false, // Set to false in production
   logging: isDevelopment,
-  entities: [User],
+  entities: [User, Role, Token, UserLimit],
   migrations: isDevelopment ? ["migrations/*.ts"] : ["dist/migrations/*.js"],
   subscribers: [],
   ssl: dbConfig.ssl,

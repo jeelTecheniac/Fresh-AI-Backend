@@ -6,7 +6,15 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  DeleteDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  OneToOne,
 } from "typeorm";
+import { Role } from "./Role";
+import { Token } from "./Token";
+import { UserLimit } from "./UserLimit";
 import bcrypt from "bcryptjs";
 
 @Entity("users")
@@ -14,117 +22,79 @@ export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
+  @Column({ type: "varchar", length: 255 })
+  fullName!: string;
+
+  @Column({ type: "varchar", length: 100, unique: true })
+  username!: string;
+
   @Column({ type: "varchar", length: 255, unique: true })
   email!: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  company?: string | null;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  department?: string | null;
+
+  @Column({ type: "boolean", default: false })
+  isVerified!: boolean;
+
+  @Column({ type: "timestamptz", nullable: true })
+  suspend_at?: Date | null;
+
+  // Soft-delete column with explicit snake_case name
+  @DeleteDateColumn({ type: "timestamptz", name: "deleted_at", nullable: true })
+  deleted_at?: Date | null;
 
   @Column({ type: "varchar", length: 255 })
   password!: string;
 
-  @Column({ type: "varchar", length: 100 })
-  firstName!: string;
+  // Self-referencing relation: which user created this user
+  @ManyToOne(() => User, user => user.createdUsers, {
+    nullable: true,
+    onDelete: "SET NULL",
+  })
+  @JoinColumn({ name: "created_by" })
+  createdBy?: User | null;
 
-  @Column({ type: "varchar", length: 100 })
-  lastName!: string;
+  // Inverse side: users that were created by this user
+  @OneToMany(() => User, user => user.createdBy)
+  createdUsers!: User[];
 
-  @Column({ type: "varchar", length: 500, nullable: true })
-  avatar?: string;
+  // Role relation
+  @ManyToOne(() => Role, role => role.users, {
+    nullable: true,
+    onDelete: "SET NULL",
+  })
+  @JoinColumn({ name: "role_id" })
+  role?: Role | null;
 
-  @Column({ type: "varchar", length: 20, nullable: true })
-  phone?: string;
+  // Tokens issued for this user
+  @OneToMany(() => Token, token => token.user)
+  tokens!: Token[];
 
-  @Column({ type: "boolean", default: false })
-  isEmailVerified!: boolean;
+  // One-to-one user limits
+  @OneToOne(() => UserLimit, (limit: UserLimit) => limit.user)
+  limits?: UserLimit;
 
-  @Column({ type: "boolean", default: true })
-  isActive!: boolean;
-
-  @Column({ type: "jsonb", nullable: true })
-  metadata?: Record<string, any>;
-
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt!: Date;
 
   @BeforeInsert()
   @BeforeUpdate()
-  async hashPassword(): Promise<void> {
-    if (this.password && this.password.length < 60) {
-      const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
-      this.password = await bcrypt.hash(this.password, saltRounds);
-    }
+  private async hashPassword(): Promise<void> {
+    if (!this.password) return;
+    // Avoid re-hashing if already hashed (bcrypt hashes are ~60 chars)
+    if (this.password.length >= 55) return;
+    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12", 10);
+    this.password = await bcrypt.hash(this.password, saltRounds);
   }
 
-  async validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
-  }
-
-  get fullName(): string {
-    return `${this.firstName} ${this.lastName}`;
-  }
-
-  toJSON(): Omit<
-    User,
-    | "password"
-    | "hashPassword"
-    | "validatePassword"
-    | "fullName"
-    | "toJSON"
-    | "updateUser"
-    | "isFullyVerified"
-    | "getDisplayName"
-    | "getInitials"
-  > {
-    const {
-      password,
-      hashPassword,
-      validatePassword,
-      fullName,
-      toJSON,
-      updateUser,
-      isFullyVerified,
-      getDisplayName,
-      getInitials,
-      ...userWithoutMethods
-    } = this;
-    return userWithoutMethods;
-  }
-
-  /**
-   * Create a new User instance with validation
-   */
-  static createUser(userData: Partial<User>): User {
-    const user = new User();
-    Object.assign(user, userData);
-    return user;
-  }
-
-  /**
-   * Update user data
-   */
-  updateUser(updateData: Partial<User>): void {
-    Object.assign(this, updateData);
-  }
-
-  /**
-   * Check if user is active and verified
-   */
-  isFullyVerified(): boolean {
-    return this.isActive && this.isEmailVerified;
-  }
-
-  /**
-   * Get user display name
-   */
-  getDisplayName(): string {
-    return this.fullName || this.email;
-  }
-
-  /**
-   * Get user initials
-   */
-  getInitials(): string {
-    return `${this.firstName.charAt(0)}${this.lastName.charAt(0)}`.toUpperCase();
+  async validatePassword(plain: string): Promise<boolean> {
+    return bcrypt.compare(plain, this.password);
   }
 }

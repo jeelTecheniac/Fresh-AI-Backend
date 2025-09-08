@@ -48,7 +48,7 @@ export class User {
   deleted_at?: Date | null;
 
   @Column({ type: "varchar", length: 255 })
-  password!: string;
+  password?: string;
 
   // Self-referencing relation: which user created this user
   @ManyToOne(() => User, user => user.createdUsers, {
@@ -95,6 +95,7 @@ export class User {
   }
 
   async validatePassword(plain: string): Promise<boolean> {
+    if (!this.password) return false;
     return bcrypt.compare(plain, this.password);
   }
 }

@@ -3,6 +3,7 @@ import { UserService, UpdateUserDto } from "../services/UserService.js";
 import { TokenService } from "../services/TokenService.js";
 import { TokenRepository } from "../repositories/TokenRepository.js";
 import { PasswordResetTokenService } from "../services/PasswordResetTokenService.js";
+import { TokenDatabaseService } from "../services/TokenDatabaseService.js";
 import { PasswordResetEmailService } from "../services/PasswordResetEmailService.js";
 import { BaseController, AuthenticatedRequest } from "./BaseController.js";
 import {
@@ -17,6 +18,7 @@ export class UserController extends BaseController {
   private tokenService: TokenService;
   private tokenRepository: TokenRepository;
   private passwordResetTokenService: PasswordResetTokenService;
+  private tokenDatabaseService: TokenDatabaseService;
   private passwordResetEmailService: PasswordResetEmailService;
 
   constructor() {
@@ -25,6 +27,7 @@ export class UserController extends BaseController {
     this.tokenService = new TokenService();
     this.tokenRepository = new TokenRepository();
     this.passwordResetTokenService = new PasswordResetTokenService();
+    this.tokenDatabaseService = new TokenDatabaseService();
     this.passwordResetEmailService = new PasswordResetEmailService();
   }
 
@@ -271,7 +274,7 @@ export class UserController extends BaseController {
   }
 
   /**
-   * Forgot password - send reset email
+   * Forgot password - send reset email (handles both initial request and resend)
    */
   async forgotPassword(
     req: AuthenticatedRequest,
@@ -306,6 +309,45 @@ export class UserController extends BaseController {
       req,
       res,
       "Forgot password"
+    );
+  }
+
+  /**
+   * Verify password reset token
+   */
+  async verifyResetPasswordToken(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        const { token } = req.query;
+
+        // Step 1: Verify JWT token and extract payload
+        const payload = this.tokenService.verifyPasswordResetToken(
+          token as string
+        );
+
+        // Step 2: Find and verify token in database
+        const tokenRecord =
+          await this.tokenDatabaseService.findAndVerifyPasswordResetToken(
+            payload.jti,
+            payload.userId
+          );
+
+        // Step 3: Mark token as verified
+        await this.tokenDatabaseService.updateToken(tokenRecord.id, {
+          verified_at: new Date(),
+        });
+
+        return {
+          message: "Token verified successfully",
+          verified: true,
+        };
+      },
+      req,
+      res,
+      "Verify password reset token"
     );
   }
 }

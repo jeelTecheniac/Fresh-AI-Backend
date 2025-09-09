@@ -3,6 +3,7 @@ import { logger } from "../utils/logger.js";
 import {
   createBadRequestError,
   createUnauthorizedError,
+  createValidationError,
 } from "../errors/index.js";
 
 export interface TokenPayload {
@@ -11,6 +12,10 @@ export interface TokenPayload {
   fullName: string;
   userName: string;
   role: string | null;
+}
+export interface ResetPasswordTokenPayload {
+  userId: string;
+  jti: string;
 }
 
 export interface TokenPair {
@@ -70,7 +75,7 @@ export class TokenService {
   /**
    * Generate password reset token (1 hour)
    */
-  generatePasswordResetToken(payload: TokenPayload): string {
+  generatePasswordResetToken(payload: ResetPasswordTokenPayload): string {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
       throw createBadRequestError("JWT_SECRET environment variable is not set");
@@ -101,7 +106,7 @@ export class TokenService {
       return jwt.verify(token, secret as Secret);
     } catch (error) {
       logger.error(`Password reset token verification error: ${error}`);
-      throw createUnauthorizedError("Invalid or expired password reset token");
+      throw createValidationError("Invalid or expired password reset token");
     }
   }
 

@@ -31,6 +31,7 @@ export const commonPatterns = {
   timestamp: Joi.date().iso(),
   isBoolean: Joi.boolean(),
   isNumber: Joi.number(),
+  token: Joi.string(),
 };
 
 export default commonPatterns;

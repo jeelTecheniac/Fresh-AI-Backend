@@ -21,6 +21,10 @@ export const forgotPasswordSchema = Joi.object({
   email: commonPatterns.email.required(),
 }).strict();
 
+export const verifyResetPasswordToken = Joi.object({
+  token: commonPatterns.token.required(),
+});
+
 export const updateProfileSchema = Joi.object({
   firstName: commonPatterns.name.optional(),
   lastName: commonPatterns.name.optional(),

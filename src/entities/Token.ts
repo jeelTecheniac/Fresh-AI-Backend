@@ -27,6 +27,9 @@ export class Token {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
+  @Column({ type: "timestamptz", nullable: true })
+  verified_at?: Date | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   createdAt!: Date;
 

@@ -23,7 +23,7 @@ export class Token {
   @Column({ type: "varchar", length: 500, unique: true })
   token!: string;
 
-  @ManyToOne(() => User, (user) => user.tokens, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, user => user.tokens, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;
 
@@ -33,5 +33,3 @@ export class Token {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt!: Date;
 }
-
-

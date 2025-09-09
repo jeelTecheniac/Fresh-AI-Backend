@@ -14,7 +14,7 @@ export class UserLimit {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @OneToOne(() => User, (user) => user.limits, { onDelete: "CASCADE" })
+  @OneToOne(() => User, user => user.limits, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;
 
@@ -39,5 +39,3 @@ export class UserLimit {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt!: Date;
 }
-
-

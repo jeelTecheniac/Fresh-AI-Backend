@@ -9,7 +9,7 @@ export const authMiddleware = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.status(401).json({
         success: false,
@@ -20,13 +20,13 @@ export const authMiddleware = async (
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
     const tokenService = new TokenService();
-    
+
     try {
       const decoded = tokenService.verifyJWT(token);
-      
+
       // Attach user info to request object
       (req as any).user = decoded;
-      
+
       next();
     } catch (error) {
       logger.warn(`Invalid token attempt: ${error}`);
@@ -51,11 +51,11 @@ export const optionalAuthMiddleware = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       const tokenService = new TokenService();
-      
+
       try {
         const decoded = tokenService.verifyJWT(token);
         (req as any).user = decoded;
@@ -64,7 +64,7 @@ export const optionalAuthMiddleware = async (
         logger.debug(`Optional auth failed: ${error}`);
       }
     }
-    
+
     next();
   } catch (error) {
     logger.error(`Optional auth middleware error: ${error}`);

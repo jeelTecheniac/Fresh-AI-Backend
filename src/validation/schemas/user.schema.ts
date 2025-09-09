@@ -17,6 +17,10 @@ export const loginSchema = Joi.object({
   password: commonPatterns.password.required(),
 }).strict();
 
+export const forgotPasswordSchema = Joi.object({
+  email: commonPatterns.email.required(),
+}).strict();
+
 export const updateProfileSchema = Joi.object({
   firstName: commonPatterns.name.optional(),
   lastName: commonPatterns.name.optional(),
@@ -38,6 +42,7 @@ export const paginationQuerySchema = Joi.object({
 export default {
   registerUserSchema,
   loginSchema,
+  forgotPasswordSchema,
   updateProfileSchema,
   userIdParamSchema,
   paginationQuerySchema,

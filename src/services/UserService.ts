@@ -1,10 +1,7 @@
 import { UserRepository } from "../repositories/UserRepository.js";
 import { User } from "../entities/User.js";
 import { logger } from "../utils/logger.js";
-import {
-  createConflictError,
-  createUnauthorizedError,
-} from "../errors/index.js";
+import { createUnauthorizedError } from "../errors/index.js";
 
 export interface CreateUserDto {
   fullName: string;
@@ -26,6 +23,10 @@ export interface UpdateUserDto {
   lastName?: string;
   avatar?: string;
   metadata?: Record<string, any>;
+}
+
+export interface ForgotPasswordDto {
+  email: string;
 }
 
 export class UserService {
@@ -130,6 +131,33 @@ export class UserService {
       return await this.userRepository.findAll(limit, offset);
     } catch (error) {
       logger.error(`Error fetching users: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate user for password reset
+   */
+  async validateUserForPasswordReset(email: string): Promise<User | null> {
+    try {
+      const user = await this.userRepository.findByEmail(email);
+
+      if (!user) {
+        // For security, don't reveal if email exists or not
+        logger.info(
+          `Forgot password requested for non-existent email: ${email}`
+        );
+        return null;
+      }
+
+      if (!user.isVerified) {
+        throw createUnauthorizedError("Account is not verified");
+      }
+
+      logger.info(`User validated for password reset: ${user.email}`);
+      return user;
+    } catch (error) {
+      logger.error(`User validation error for password reset: ${error}`);
       throw error;
     }
   }

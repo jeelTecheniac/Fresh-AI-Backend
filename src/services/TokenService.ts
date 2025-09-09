@@ -68,6 +68,44 @@ export class TokenService {
   }
 
   /**
+   * Generate password reset token (1 hour)
+   */
+  generatePasswordResetToken(payload: TokenPayload): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw createBadRequestError("JWT_SECRET environment variable is not set");
+    }
+
+    const signOptions: SignOptions = { expiresIn: 60 * 60 }; // 1 hour
+
+    try {
+      return jwt.sign(payload, secret as Secret, signOptions);
+    } catch (error) {
+      logger.error(`Password reset token generation error: ${error}`);
+      throw createBadRequestError("Failed to generate password reset token");
+    }
+  }
+
+  /**
+   * Verify password reset token
+   */
+  verifyPasswordResetToken(token: string): any {
+    try {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        throw createBadRequestError(
+          "JWT_SECRET environment variable is not set"
+        );
+      }
+
+      return jwt.verify(token, secret as Secret);
+    } catch (error) {
+      logger.error(`Password reset token verification error: ${error}`);
+      throw createUnauthorizedError("Invalid or expired password reset token");
+    }
+  }
+
+  /**
    * Verify access token
    */
   verifyAccessToken(token: string): any {

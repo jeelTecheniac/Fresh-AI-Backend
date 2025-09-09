@@ -7,8 +7,6 @@ import { logger } from "./utils/logger.js";
 // Load environment variables first
 dotenv.config();
 
-console.log(process.env.DB_PORT, "db port");
-
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 

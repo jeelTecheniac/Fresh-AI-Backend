@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { UserService } from "../services/UserService.js";
+import { TokenService } from "../services/TokenService.js";
 import { logger } from "../utils/logger.js";
 
 export const authMiddleware = async (
@@ -19,10 +19,10 @@ export const authMiddleware = async (
     }
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
-    const userService = new UserService();
+    const tokenService = new TokenService();
     
     try {
-      const decoded = await userService.verifyJWT(token);
+      const decoded = tokenService.verifyJWT(token);
       
       // Attach user info to request object
       (req as any).user = decoded;
@@ -54,10 +54,10 @@ export const optionalAuthMiddleware = async (
     
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
-      const userService = new UserService();
+      const tokenService = new TokenService();
       
       try {
-        const decoded = await userService.verifyJWT(token);
+        const decoded = tokenService.verifyJWT(token);
         (req as any).user = decoded;
       } catch (error) {
         // Token is invalid, but we continue without user info

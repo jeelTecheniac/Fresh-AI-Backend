@@ -11,7 +11,7 @@ const userController = new UserController();
 
 // User registration
 router.post(
-  "/register",
+  "/create-super-admin-user",
   validateRequest(registerUserSchema, "body"),
   async (req, res) => {
     await userController.register(req, res);

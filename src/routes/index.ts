@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoutes from "./auth.js";
 import userRoutes from "./users.js";
+import roleRoutes from "./roles.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.get("/health", (req, res) => {
 // API routes
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
+router.use("/roles", roleRoutes);
 
 // 404 handler for undefined routes
 router.use("*", (req, res) => {

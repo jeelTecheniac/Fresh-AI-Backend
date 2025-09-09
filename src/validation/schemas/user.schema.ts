@@ -2,16 +2,19 @@ import Joi from "joi";
 import { commonPatterns } from "./common.schema.js";
 
 export const registerUserSchema = Joi.object({
+  fullName: commonPatterns.name.required(),
+  userName: commonPatterns.username.required(),
   email: commonPatterns.email.required(),
-  password: commonPatterns.password.required(),
-  firstName: commonPatterns.name.required(),
-  lastName: commonPatterns.name.required(),
+  company: commonPatterns.name.required(),
+  department: commonPatterns.name.required(),
+  password: commonPatterns.password.optional(),
   avatar: commonPatterns.url.optional(),
+  role: commonPatterns.uuid.optional(),
 }).strict();
 
 export const loginSchema = Joi.object({
   email: commonPatterns.email.required(),
-  password: Joi.string().required(),
+  password: commonPatterns.password.required(),
 }).strict();
 
 export const updateProfileSchema = Joi.object({

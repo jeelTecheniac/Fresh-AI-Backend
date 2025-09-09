@@ -26,7 +26,7 @@ export class User {
   fullName!: string;
 
   @Column({ type: "varchar", length: 100, unique: true })
-  username!: string;
+  userName!: string;
 
   @Column({ type: "varchar", length: 255, unique: true })
   email!: string;
@@ -49,6 +49,9 @@ export class User {
 
   @Column({ type: "varchar", length: 255 })
   password?: string;
+
+  @Column({ type: "varchar", nullable: true })
+  avatar?: string;
 
   // Self-referencing relation: which user created this user
   @ManyToOne(() => User, user => user.createdUsers, {

@@ -17,7 +17,10 @@ export class UserRepository {
     return this.repository.findOne({ where: { email } });
   }
 
-  async findAll(limit = 10, offset = 0): Promise<{ users: User[]; total: number }> {
+  async findAll(
+    limit = 10,
+    offset = 0
+  ): Promise<{ users: User[]; total: number }> {
     const [users, total] = await this.repository.findAndCount({
       take: limit,
       skip: offset,
@@ -43,12 +46,18 @@ export class UserRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const result = await this.repository.update(id, { isActive: false });
+    const result = await this.repository.update(id, { isVerified: false });
     return result.affected !== 0;
   }
 
-  async findByEmailAndPassword(email: string, password: string): Promise<User | null> {
-    const user = await this.findByEmail(email);
+  async findByEmailAndPassword(
+    email: string,
+    password: string
+  ): Promise<User | null> {
+    const user = await this.repository.findOne({
+      where: { email },
+      relations: ["role"],
+    });
     if (user && (await user.validatePassword(password))) {
       return user;
     }

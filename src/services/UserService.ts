@@ -1,18 +1,18 @@
-import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import { UserRepository } from "../repositories/UserRepository.js";
 import { User } from "../entities/User.js";
 import { logger } from "../utils/logger.js";
 import {
   createConflictError,
   createUnauthorizedError,
-  createBadRequestError,
 } from "../errors/index.js";
 
 export interface CreateUserDto {
+  fullName: string;
+  username: string;
   email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+  company?: string | null;
+  department?: string | null;
+  password?: string;
   avatar?: string;
 }
 
@@ -37,18 +37,8 @@ export class UserService {
 
   async createUser(userData: CreateUserDto): Promise<User> {
     try {
-      // Check if user already exists
-      const existingUser = await this.userRepository.findByEmail(
-        userData.email
-      );
-      if (existingUser) {
-        throw createConflictError("User with this email already exists");
-      }
-
-      // Create new user
       const user = await this.userRepository.create(userData);
       logger.info(`User created successfully: ${user.email}`);
-
       return user;
     } catch (error) {
       logger.error(`Error creating user: ${error}`);
@@ -56,7 +46,21 @@ export class UserService {
     }
   }
 
-  async loginUser(loginData: LoginDto): Promise<{ user: User; token: string }> {
+  async findByEmail(email: string): Promise<User | null> {
+    try {
+      return await this.userRepository.findByEmail(email);
+    } catch (error) {
+      logger.error(`Error finding user by email: ${error}`);
+      throw error;
+    }
+  }
+
+  async isEmailTaken(email: string): Promise<boolean> {
+    const user = await this.findByEmail(email);
+    return !!user;
+  }
+
+  async loginUser(loginData: LoginDto): Promise<User> {
     try {
       const user = await this.userRepository.findByEmailAndPassword(
         loginData.email,
@@ -67,14 +71,13 @@ export class UserService {
         throw createUnauthorizedError("Invalid email or password");
       }
 
-      if (!user.isActive) {
+      if (!user.isVerified) {
         throw createUnauthorizedError("User account is deactivated");
       }
 
-      const token = this.generateJWT(user);
       logger.info(`User logged in successfully: ${user.email}`);
 
-      return { user, token };
+      return user;
     } catch (error) {
       logger.error(`Login error: ${error}`);
       throw error;
@@ -128,47 +131,6 @@ export class UserService {
     } catch (error) {
       logger.error(`Error fetching users: ${error}`);
       throw error;
-    }
-  }
-
-  private generateJWT(user: User): string {
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    };
-
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw createBadRequestError("JWT_SECRET environment variable is not set");
-    }
-
-    const envExpires = process.env.JWT_EXPIRES_IN;
-    let signOptions: SignOptions;
-    if (!envExpires) {
-      signOptions = { expiresIn: 60 * 60 * 24 };
-    } else if (!Number.isNaN(Number(envExpires))) {
-      signOptions = { expiresIn: Number(envExpires) };
-    } else {
-      signOptions = { expiresIn: envExpires as unknown as any };
-    }
-    return jwt.sign(payload, secret as Secret, signOptions);
-  }
-
-  async verifyJWT(token: string): Promise<any> {
-    try {
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
-        throw createBadRequestError(
-          "JWT_SECRET environment variable is not set"
-        );
-      }
-
-      return jwt.verify(token, secret as Secret);
-    } catch (error) {
-      logger.error(`JWT verification error: ${error}`);
-      throw createUnauthorizedError("Invalid token");
     }
   }
 }

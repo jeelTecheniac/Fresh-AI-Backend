@@ -49,6 +49,8 @@ export abstract class BaseController {
   ): void {
     const response = createValidationError(message, code || "INTERNAL_ERROR", details);
     if (error) response.error = error;
+    // Include numeric HTTP status code in the response payload for client-side access
+    (response as any).statusCode = statusCode;
     res.status(statusCode).json(response);
   }
 

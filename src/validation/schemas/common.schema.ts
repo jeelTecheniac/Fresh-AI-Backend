@@ -16,11 +16,21 @@ export const commonPatterns = {
     .trim()
     .pattern(/^[a-zA-Z\s'-]+$/)
     .message("Name can only contain letters, spaces, hyphens, and apostrophes"),
+  username: Joi.string()
+    .min(3)
+    .max(30)
+    .trim()
+    .pattern(/^[a-zA-Z0-9._-]+$/)
+    .message(
+      "Username can contain letters, numbers, dots, underscores, and hyphens"
+    ),
   url: Joi.string().uri().max(500),
   positiveInteger: Joi.number().integer().positive(),
   nonNegativeInteger: Joi.number().integer().min(0),
   jsonObject: Joi.object().unknown(true),
   timestamp: Joi.date().iso(),
+  isBoolean: Joi.boolean(),
+  isNumber: Joi.number(),
 };
 
 export default commonPatterns;

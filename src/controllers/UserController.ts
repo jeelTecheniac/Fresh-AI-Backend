@@ -5,19 +5,26 @@ import {
   LoginDto,
   UpdateUserDto,
 } from "../services/UserService.js";
+import { TokenService } from "../services/TokenService.js";
+import { TokenRepository } from "../repositories/TokenRepository.js";
 import { BaseController, AuthenticatedRequest } from "./BaseController.js";
 import {
   createUnauthorizedError,
   createBadRequestError,
   createNotFoundError,
+  createConflictError,
 } from "../errors/index.js";
 
 export class UserController extends BaseController {
   private userService: UserService;
+  private tokenService: TokenService;
+  private tokenRepository: TokenRepository;
 
   constructor() {
     super();
     this.userService = new UserService();
+    this.tokenService = new TokenService();
+    this.tokenRepository = new TokenRepository();
   }
 
   /**
@@ -26,8 +33,12 @@ export class UserController extends BaseController {
   async register(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.handleAsync(
       async () => {
-        const userData = this.getValidatedData<CreateUserDto>(req);
-        const user = await this.userService.createUser(userData);
+        const isTaken = await this.userService.isEmailTaken(req.body.email);
+        if (isTaken) {
+          throw createConflictError("User with this email already exists");
+        }
+
+        const user = await this.userService.createUser(req.body);
         return this.sanitizeData(user);
       },
       req,
@@ -42,9 +53,29 @@ export class UserController extends BaseController {
   async login(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.handleAsync(
       async () => {
-        const { email, password } = this.getValidatedData<LoginDto>(req);
-        const result = await this.userService.loginUser({ email, password });
-        return result;
+        const user = await this.userService.loginUser(req.body);
+        const tokenPayload = this.tokenService.createTokenPayload(user);
+        const { accessToken, refreshToken } =
+          this.tokenService.generateTokenPair(tokenPayload);
+
+        const refreshTokenExpiry = new Date();
+        refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + 90); // 3 months
+        await this.tokenRepository.storeRefreshToken(
+          user,
+          refreshToken,
+          refreshTokenExpiry
+        );
+
+        return {
+          user: this.sanitizeData(user, [
+            "password",
+            "role",
+            "suspend_at",
+            "deleted_at",
+          ]),
+          accessToken,
+          refreshToken,
+        };
       },
       req,
       res,
@@ -164,6 +195,77 @@ export class UserController extends BaseController {
       req,
       res,
       "Delete user"
+    );
+  }
+
+  /**
+   * Refresh access token using refresh token
+   */
+  async refreshToken(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+          throw createBadRequestError("Refresh token is required");
+        }
+
+        // Verify refresh token
+        const decoded = this.tokenService.verifyRefreshToken(refreshToken);
+
+        // Check if refresh token exists in database and is valid
+        const tokenRecord =
+          await this.tokenRepository.findRefreshToken(refreshToken);
+        if (
+          !tokenRecord ||
+          !(await this.tokenRepository.isRefreshTokenValid(refreshToken))
+        ) {
+          throw createUnauthorizedError("Invalid or expired refresh token");
+        }
+
+        // Get user with role information
+        const user = await this.userService.getUserById(decoded.userId);
+        if (!user) {
+          throw createNotFoundError("User not found");
+        }
+
+        // Generate new access token
+        const tokenPayload = this.tokenService.createTokenPayload(user);
+        const accessToken = this.tokenService.generateAccessToken(tokenPayload);
+
+        return {
+          accessToken,
+          user: this.sanitizeData(user, [
+            "password",
+            "role",
+            "suspend_at",
+            "deleted_at",
+          ]),
+        };
+      },
+      req,
+      res,
+      "Refresh token"
+    );
+  }
+
+  /**
+   * Logout user (invalidate refresh token)
+   */
+  async logout(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        const { refreshToken } = req.body;
+
+        if (refreshToken) {
+          await this.tokenRepository.invalidateRefreshToken(refreshToken);
+        }
+
+        return { message: "Logged out successfully" };
+      },
+      req,
+      res,
+      "User logout"
     );
   }
 }

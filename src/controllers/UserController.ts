@@ -1,12 +1,9 @@
 import { Response } from "express";
-import {
-  UserService,
-  CreateUserDto,
-  LoginDto,
-  UpdateUserDto,
-} from "../services/UserService.js";
+import { UserService, UpdateUserDto } from "../services/UserService.js";
 import { TokenService } from "../services/TokenService.js";
 import { TokenRepository } from "../repositories/TokenRepository.js";
+import { PasswordResetTokenService } from "../services/PasswordResetTokenService.js";
+import { PasswordResetEmailService } from "../services/PasswordResetEmailService.js";
 import { BaseController, AuthenticatedRequest } from "./BaseController.js";
 import {
   createUnauthorizedError,
@@ -19,12 +16,16 @@ export class UserController extends BaseController {
   private userService: UserService;
   private tokenService: TokenService;
   private tokenRepository: TokenRepository;
+  private passwordResetTokenService: PasswordResetTokenService;
+  private passwordResetEmailService: PasswordResetEmailService;
 
   constructor() {
     super();
     this.userService = new UserService();
     this.tokenService = new TokenService();
     this.tokenRepository = new TokenRepository();
+    this.passwordResetTokenService = new PasswordResetTokenService();
+    this.passwordResetEmailService = new PasswordResetEmailService();
   }
 
   /**
@@ -266,6 +267,45 @@ export class UserController extends BaseController {
       req,
       res,
       "User logout"
+    );
+  }
+
+  /**
+   * Forgot password - send reset email
+   */
+  async forgotPassword(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        // Validate user for password reset
+        const user = await this.userService.validateUserForPasswordReset(
+          req.body.email
+        );
+
+        // Always return success message for security (don't reveal if email exists)
+        const result = {
+          message: "If the email exists, a password reset link has been sent.",
+        };
+
+        // If user exists and is valid, generate/store token and send email
+        if (user) {
+          const resetToken =
+            await this.passwordResetTokenService.generateAndStoreResetToken(
+              user
+            );
+          await this.passwordResetEmailService.sendPasswordResetEmail(
+            user,
+            resetToken
+          );
+        }
+
+        return result;
+      },
+      req,
+      res,
+      "Forgot password"
     );
   }
 }

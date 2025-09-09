@@ -4,6 +4,7 @@ import { validateRequest } from "../validation/middleware.js";
 import {
   registerUserSchema,
   loginSchema,
+  forgotPasswordSchema,
 } from "../validation/schemas/user.schema.js";
 
 const router = Router();
@@ -24,6 +25,15 @@ router.post(
   validateRequest(loginSchema, "body"),
   async (req, res) => {
     await userController.login(req, res);
+  }
+);
+
+// Forgot password
+router.post(
+  "/forgot-password",
+  validateRequest(forgotPasswordSchema, "body"),
+  async (req, res) => {
+    await userController.forgotPassword(req, res);
   }
 );
 

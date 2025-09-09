@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { BaseController, AuthenticatedRequest } from "./BaseController.js";
-import { RoleService, CreateRoleDto } from "../services/RoleService.js";
+import { RoleService } from "../services/RoleService.js";
 
 export class RoleController extends BaseController {
   private roleService: RoleService;

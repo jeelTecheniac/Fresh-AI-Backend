@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { logger } from "../utils/logger.js";
-import { createSuccessResponse, createValidationError } from "../middleware/validation.js";
+import {
+  createSuccessResponse,
+  createValidationError,
+} from "../middleware/validation.js";
 
 export interface PaginationInfo {
   page: number;
@@ -47,7 +50,11 @@ export abstract class BaseController {
     code?: string,
     details?: any[]
   ): void {
-    const response = createValidationError(message, code || "INTERNAL_ERROR", details);
+    const response = createValidationError(
+      message,
+      code || "INTERNAL_ERROR",
+      details
+    );
     if (error) response.error = error;
     // Include numeric HTTP status code in the response payload for client-side access
     (response as any).statusCode = statusCode;
@@ -63,7 +70,14 @@ export abstract class BaseController {
     details?: any[],
     statusCode: number = 400
   ): void {
-    this.sendError(res, message, statusCode, "VALIDATION_ERROR", "INVALID_DATA", details);
+    this.sendError(
+      res,
+      message,
+      statusCode,
+      "VALIDATION_ERROR",
+      "INVALID_DATA",
+      details
+    );
   }
 
   /**
@@ -74,7 +88,13 @@ export abstract class BaseController {
     message: string = "Resource not found",
     statusCode: number = 404
   ): void {
-    this.sendError(res, message, statusCode, "NOT_FOUND_ERROR", "RESOURCE_NOT_FOUND");
+    this.sendError(
+      res,
+      message,
+      statusCode,
+      "NOT_FOUND_ERROR",
+      "RESOURCE_NOT_FOUND"
+    );
   }
 
   /**
@@ -85,7 +105,13 @@ export abstract class BaseController {
     message: string = "Unauthorized access",
     statusCode: number = 401
   ): void {
-    this.sendError(res, message, statusCode, "AUTHENTICATION_ERROR", "UNAUTHORIZED");
+    this.sendError(
+      res,
+      message,
+      statusCode,
+      "AUTHENTICATION_ERROR",
+      "UNAUTHORIZED"
+    );
   }
 
   /**
@@ -96,7 +122,13 @@ export abstract class BaseController {
     message: string = "Access forbidden",
     statusCode: number = 403
   ): void {
-    this.sendError(res, message, statusCode, "AUTHORIZATION_ERROR", "FORBIDDEN");
+    this.sendError(
+      res,
+      message,
+      statusCode,
+      "AUTHORIZATION_ERROR",
+      "FORBIDDEN"
+    );
   }
 
   /**
@@ -107,7 +139,13 @@ export abstract class BaseController {
     message: string = "Resource conflict",
     statusCode: number = 409
   ): void {
-    this.sendError(res, message, statusCode, "CONFLICT_ERROR", "RESOURCE_CONFLICT");
+    this.sendError(
+      res,
+      message,
+      statusCode,
+      "CONFLICT_ERROR",
+      "RESOURCE_CONFLICT"
+    );
   }
 
   /**
@@ -120,7 +158,9 @@ export abstract class BaseController {
   /**
    * Get pagination info from request
    */
-  protected getPagination(req: AuthenticatedRequest): PaginationInfo | undefined {
+  protected getPagination(
+    req: AuthenticatedRequest
+  ): PaginationInfo | undefined {
     return req.pagination;
   }
 
@@ -161,7 +201,11 @@ export abstract class BaseController {
   /**
    * Log error information
    */
-  protected logError(error: any, operation: string, req?: AuthenticatedRequest): void {
+  protected logError(
+    error: any,
+    operation: string,
+    req?: AuthenticatedRequest
+  ): void {
     this.logger.error(`Error in ${operation}: ${error.message}`, {
       operation,
       error: error.stack,
@@ -183,7 +227,7 @@ export abstract class BaseController {
     try {
       this.logRequest(req, operationName);
       const result = await operation();
-      
+
       if (result === null || result === undefined) {
         this.sendNotFound(res, `${operationName} not found`);
         return;
@@ -192,15 +236,24 @@ export abstract class BaseController {
       this.sendSuccess(res, result, `${operationName} successful`);
     } catch (error) {
       this.logError(error, operationName, req);
-      
+
       if (error instanceof Error) {
         if (error.message.includes("not found")) {
           this.sendNotFound(res, error.message);
-        } else if (error.message.includes("unauthorized") || error.message.includes("Unauthorized")) {
+        } else if (
+          error.message.includes("unauthorized") ||
+          error.message.includes("Unauthorized")
+        ) {
           this.sendUnauthorized(res, error.message);
-        } else if (error.message.includes("forbidden") || error.message.includes("Forbidden")) {
+        } else if (
+          error.message.includes("forbidden") ||
+          error.message.includes("Forbidden")
+        ) {
           this.sendForbidden(res, error.message);
-        } else if (error.message.includes("conflict") || error.message.includes("already exists")) {
+        } else if (
+          error.message.includes("conflict") ||
+          error.message.includes("already exists")
+        ) {
           this.sendConflict(res, error.message);
         } else {
           this.sendError(res, error.message);
@@ -221,7 +274,7 @@ export abstract class BaseController {
     limit: number
   ) {
     const totalPages = Math.ceil(total / limit);
-    
+
     return {
       data,
       pagination: {
@@ -243,9 +296,12 @@ export abstract class BaseController {
     requiredFields: string[]
   ): { isValid: boolean; missingFields: string[] } {
     const missingFields: string[] = [];
-    
+
     for (const field of requiredFields) {
-      if (!data[field] || (typeof data[field] === "string" && data[field].trim() === "")) {
+      if (
+        !data[field] ||
+        (typeof data[field] === "string" && data[field].trim() === "")
+      ) {
         missingFields.push(field);
       }
     }
@@ -259,9 +315,12 @@ export abstract class BaseController {
   /**
    * Sanitize data by removing sensitive fields
    */
-  protected sanitizeData<T extends object>(data: T, sensitiveFields: string[] = ["password"]): Partial<T> {
+  protected sanitizeData<T extends object>(
+    data: T,
+    sensitiveFields: string[] = ["password"]
+  ): Partial<T> {
     const sanitized = { ...data };
-    
+
     for (const field of sensitiveFields) {
       if (field in sanitized) {
         delete (sanitized as any)[field];

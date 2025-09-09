@@ -158,4 +158,3 @@ export const corsConfig = {
   credentials: true,
   optionsSuccessStatus: 200,
 };
-

@@ -28,5 +28,3 @@ export class RoleService {
     return this.roleRepository.findByName(name);
   }
 }
-
-

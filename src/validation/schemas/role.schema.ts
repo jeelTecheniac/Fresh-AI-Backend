@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { commonPatterns } from "./common.schema.js";
 
 export const createRoleSchema = Joi.object({
   name: Joi.string()
@@ -7,10 +6,10 @@ export const createRoleSchema = Joi.object({
     .max(100)
     .trim()
     .pattern(/^[a-zA-Z0-9._\-\s]+$/)
-    .message("Role name can contain letters, numbers, spaces, dots, underscores, hyphens")
+    .message(
+      "Role name can contain letters, numbers, spaces, dots, underscores, hyphens"
+    )
     .required(),
 }).strict();
 
 export default { createRoleSchema };
-
-

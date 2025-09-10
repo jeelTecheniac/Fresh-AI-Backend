@@ -23,6 +23,7 @@ export interface UpdateUserDto {
   lastName?: string;
   avatar?: string;
   metadata?: Record<string, any>;
+  password?: string;
 }
 
 export interface ForgotPasswordDto {

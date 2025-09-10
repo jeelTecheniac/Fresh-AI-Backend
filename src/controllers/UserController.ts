@@ -327,7 +327,6 @@ export class UserController extends BaseController {
         const payload = this.tokenService.verifyPasswordResetToken(
           token as string
         );
-
         // Step 2: Find and verify token in database
         const tokenRecord =
           await this.tokenDatabaseService.findAndVerifyPasswordResetToken(
@@ -348,6 +347,53 @@ export class UserController extends BaseController {
       req,
       res,
       "Verify password reset token"
+    );
+  }
+
+  async resetPassword(req: AuthenticatedRequest, res: Response): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        const { token, newPassword, confirmPassword } = req.body;
+
+        if (newPassword !== confirmPassword) {
+          throw createBadRequestError(
+            "New password and confirm password do not match"
+          );
+        }
+
+        // Step 1: Verify JWT token and extract payload
+        const payload = this.tokenService.verifyPasswordResetToken(
+          token as string
+        );
+
+        // Step 2: Find and verify token in database
+        const tokenRecord = await this.tokenRepository.findPasswordResetToken(
+          payload.jti
+        );
+
+        if (!tokenRecord || !tokenRecord?.verified_at) {
+          throw createBadRequestError(
+            "Invalid or expired password reset token"
+          );
+        } else {
+          // Step 3: Mark token as verified
+          await this.userService.updateUser(tokenRecord?.user.id, {
+            password: newPassword,
+          });
+
+          await this.tokenDatabaseService.updateToken(tokenRecord.id, {
+            verified_at: null,
+          });
+        }
+
+        return {
+          message: "Password reset successfully",
+          verified: true,
+        };
+      },
+      req,
+      res,
+      "Reset Password"
     );
   }
 }

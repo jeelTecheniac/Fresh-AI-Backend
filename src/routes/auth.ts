@@ -6,6 +6,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   verifyResetPasswordToken,
+  resetPasswordSchema,
 } from "../validation/schemas/user.schema.js";
 
 const router = Router();
@@ -42,6 +43,14 @@ router.get(
   validateRequest(verifyResetPasswordToken, "query"),
   async (req, res) => {
     await userController.verifyResetPasswordToken(req, res);
+  }
+);
+
+router.post(
+  "/reset-password",
+  validateRequest(resetPasswordSchema, "body"),
+  async (req, res) => {
+    await userController.resetPassword(req, res);
   }
 );
 

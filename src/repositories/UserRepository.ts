@@ -36,8 +36,11 @@ export class UserRepository {
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
-    await this.repository.update(id, userData);
-    return this.findById(id);
+    const user = await this.repository.findOneBy({ id });
+    if (!user) return null;
+
+    Object.assign(user, userData);
+    return this.repository.save(user);
   }
 
   async delete(id: string): Promise<boolean> {

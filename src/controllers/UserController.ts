@@ -353,9 +353,9 @@ export class UserController extends BaseController {
   async resetPassword(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.handleAsync(
       async () => {
-        const { token, newPassword, confirmPassword } = req.body;
+        const { token, password, confirmPassword } = req.body;
 
-        if (newPassword !== confirmPassword) {
+        if (password !== confirmPassword) {
           throw createBadRequestError(
             "New password and confirm password do not match"
           );
@@ -378,7 +378,7 @@ export class UserController extends BaseController {
         } else {
           // Step 3: Mark token as verified
           await this.userService.updateUser(tokenRecord?.user.id, {
-            password: newPassword,
+            password: password,
           });
 
           await this.tokenDatabaseService.updateToken(tokenRecord.id, {

@@ -27,7 +27,7 @@ export const verifyResetPasswordToken = Joi.object({
 
 export const resetPasswordSchema = Joi.object({
   token: commonPatterns.token.required(),
-  newPassword: commonPatterns.password.required(),
+  password: commonPatterns.password.required(),
   confirmPassword: commonPatterns.password.required(),
 });
 

@@ -367,9 +367,8 @@ export class UserController extends BaseController {
         );
 
         // Step 2: Find and verify token in database
-        const tokenRecord = await this.tokenRepository.findPasswordResetToken(
-          payload.jti
-        );
+        const tokenRecord =
+          await this.tokenDatabaseService.findPasswordResetToken(payload.jti);
 
         if (!tokenRecord || !tokenRecord?.verified_at) {
           throw createBadRequestError(

@@ -36,6 +36,26 @@ export class TokenDatabaseService {
     }
   }
 
+  async findPasswordResetToken(jti: string) {
+    try {
+      const tokenRecord =
+        await this.tokenRepository.findPasswordResetToken(jti);
+
+      if (!tokenRecord) {
+        throw new Error("Token not found");
+      }
+
+      logger.info(
+        `Token found in database for user: ${tokenRecord.user.email}`
+      );
+
+      return tokenRecord;
+    } catch (error) {
+      logger.error(`Token database lookup error: ${error}`);
+      throw error;
+    }
+  }
+
   /**
    * Update token record in database
    */

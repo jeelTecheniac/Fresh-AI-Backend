@@ -39,8 +39,8 @@ export class UserRepository {
     const user = await this.repository.findOneBy({ id });
     if (!user) return null;
 
-    Object.assign(user, userData); // merge incoming changes
-    return this.repository.save(user); // ✅ triggers @BeforeUpdate
+    Object.assign(user, userData);
+    return this.repository.save(user);
   }
 
   async delete(id: string): Promise<boolean> {

@@ -374,17 +374,15 @@ export class UserController extends BaseController {
           throw createBadRequestError(
             "Invalid or expired password reset token"
           );
-        } else {
-          // Step 3: Mark token as verified
-          await this.userService.updateUser(tokenRecord?.user.id, {
-            password: password,
-          });
-
-          await this.tokenDatabaseService.updateToken(tokenRecord.id, {
-            verified_at: null,
-          });
         }
+        // Step 3: Mark token as verified
+        await this.userService.updateUser(tokenRecord?.user.id, {
+          password: password,
+        });
 
+        await this.tokenDatabaseService.updateToken(tokenRecord.id, {
+          verified_at: null,
+        });
         return {
           message: "Password reset successfully",
           verified: true,

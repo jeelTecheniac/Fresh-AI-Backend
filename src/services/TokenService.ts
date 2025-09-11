@@ -18,6 +18,11 @@ export interface ResetPasswordTokenPayload {
   jti: string;
 }
 
+export interface adminSetPassword {
+  userId: string;
+  jti: string;
+}
+
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
@@ -87,6 +92,22 @@ export class TokenService {
       return jwt.sign(payload, secret as Secret, signOptions);
     } catch (error) {
       logger.error(`Password reset token generation error: ${error}`);
+      throw createBadRequestError("Failed to generate password reset token");
+    }
+  }
+
+  generateAndStoreRsetAdminPasswordToken(payload: adminSetPassword): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw createBadRequestError("JWT_SECRET environment variable is not set");
+    }
+
+    const signOptions: SignOptions = { expiresIn: 60 * 60 }; // 1 hour
+
+    try {
+      return jwt.sign(payload, secret as Secret, signOptions);
+    } catch (error) {
+      logger.error(`set admin password token generation error: ${error}`);
       throw createBadRequestError("Failed to generate password reset token");
     }
   }

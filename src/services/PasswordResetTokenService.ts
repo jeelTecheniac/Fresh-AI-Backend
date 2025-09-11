@@ -46,4 +46,35 @@ export class PasswordResetTokenService {
       throw error;
     }
   }
+
+  async generateAndStoreRsetAdminPasswordToken(user: User): Promise<string> {
+    try {
+      // Generate password reset token
+      const jti = uuidv4();
+      const tokenPayload = {
+        jti,
+        userId: user.id,
+      };
+      const resetToken =
+        this.tokenService.generateAndStoreRsetAdminPasswordToken(tokenPayload);
+
+      // Store reset token in database (expires in 1 hour)
+      const resetTokenExpiry = new Date();
+      resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1);
+
+      await this.tokenRepository.storeAdminSetPasswordToken(
+        user,
+        jti,
+        resetTokenExpiry
+      );
+
+      logger.info(
+        `Password reset token generated and stored for user: ${user.email}`
+      );
+      return resetToken;
+    } catch (error) {
+      logger.error(`Password reset token generation error: ${error}`);
+      throw error;
+    }
+  }
 }

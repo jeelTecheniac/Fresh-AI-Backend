@@ -37,7 +37,8 @@ export class PasswordResetEmailService {
     try {
       // For now, use the standard email service
       // In the future, this could be extended to support custom messages
-      await this.emailService.sendPasswordResetEmail(
+      await this.emailService.sendAdminPasswordSetEmail(
+        user,
         user.email,
         resetToken,
         user.fullName

@@ -5,12 +5,13 @@ import { createUnauthorizedError } from "../errors/index.js";
 
 export interface CreateUserDto {
   fullName: string;
-  username: string;
+  userName: string;
   email: string;
   company?: string | null;
   department?: string | null;
   password?: string;
   avatar?: string;
+  role?: string | null;
 }
 
 export interface LoginDto {
@@ -39,6 +40,7 @@ export class UserService {
 
   async createUser(userData: CreateUserDto): Promise<User> {
     try {
+      console.log(userData, "userData");
       const user = await this.userRepository.create(userData);
       logger.info(`User created successfully: ${user.email}`);
       return user;
@@ -53,6 +55,17 @@ export class UserService {
       return await this.userRepository.findByEmail(email);
     } catch (error) {
       logger.error(`Error finding user by email: ${error}`);
+      throw error;
+    }
+  }
+
+  async getRoleIdByName(roleName: string): Promise<string | null> {
+    try {
+      const user = await this.userRepository.getRoleIdByName(roleName);
+      console.log(user, "user");
+      return null;
+    } catch (error) {
+      logger.error(`Error fetching role ID: ${error}`);
       throw error;
     }
   }

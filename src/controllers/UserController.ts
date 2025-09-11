@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { UserService, UpdateUserDto } from "../services/UserService.js";
 import { TokenService } from "../services/TokenService.js";
+import { RoleService } from "../services/RoleService.js";
 import { TokenRepository } from "../repositories/TokenRepository.js";
 import { PasswordResetTokenService } from "../services/PasswordResetTokenService.js";
 import { TokenDatabaseService } from "../services/TokenDatabaseService.js";
@@ -12,9 +13,13 @@ import {
   createNotFoundError,
   createConflictError,
 } from "../errors/index.js";
+import { UserLImitService } from "@/services/UserLimitService.js";
+
 
 export class UserController extends BaseController {
   private userService: UserService;
+  private roleService: RoleService;
+  private UserLimitService: UserLImitService;
   private tokenService: TokenService;
   private tokenRepository: TokenRepository;
   private passwordResetTokenService: PasswordResetTokenService;
@@ -24,6 +29,8 @@ export class UserController extends BaseController {
   constructor() {
     super();
     this.userService = new UserService();
+    this.UserLimitService = new UserLImitService();
+    this.roleService = new RoleService();
     this.tokenService = new TokenService();
     this.tokenRepository = new TokenRepository();
     this.passwordResetTokenService = new PasswordResetTokenService();
@@ -37,12 +44,42 @@ export class UserController extends BaseController {
   async register(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.handleAsync(
       async () => {
+        // const id = req.user;
+        const role = await this.roleService.getRoleIdByName("admin");
+        console.log(role, "role");
+        const data = {
+          fullName: req.body.fullName,
+          userName: req.body.userName,
+          email: req.body.email,
+          company: req.body.company,
+          department: req.body.department,
+          password: req.body.password,
+          avatar: req.body.avatar,
+          role: role,
+        };
+
         const isTaken = await this.userService.isEmailTaken(req.body.email);
-        if (isTaken) {
-          throw createConflictError("User with this email already exists");
+        // if (isTaken) {
+        //   throw createConflictError("User with this email already exists");
+        // }
+        const user = await this.userService.createUser(data);
+        console.log(user, "user");
+        if (!user) {
+          throw createBadRequestError("User creation failed");
         }
 
-        const user = await this.userService.createUser(req.body);
+        const LimitData = {
+          user: user,
+          total_user_license: req.body.totalUserLicenses || null,
+          max_persona: req.body.maxPersonas,
+          max_image_upload: req.body.maxImageUpload,
+          monthly_query_limit: req.body.monthlyQueryLimit,
+          max_document_upload: req.body.maxDocumentUpload,
+        };
+        console.log(LimitData, "LimitData");
+        const userLimit =
+          await this.UserLimitService.createUserLimit(LimitData);
+
         return this.sanitizeData(user);
       },
       req,
@@ -299,6 +336,47 @@ export class UserController extends BaseController {
               user
             );
           await this.passwordResetEmailService.sendPasswordResetEmail(
+            user,
+            resetToken
+          );
+        }
+
+        return result;
+      },
+      req,
+      res,
+      "Forgot password"
+    );
+  }
+
+  /**
+   * set password - send set email (handles both initial request and resend)
+   */
+  async sendSetPasswordEmail(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        // Validate user for password reset
+        const user = await this.userService.validateUserForPasswordReset(
+          req.body.email
+        );
+        console.log(user, 'user in send passwod');
+
+
+        // Always return success message for security (don't reveal if email exists)
+        const result = {
+          message: "If the email exists, a password reset link has been sent.",
+        };
+
+        // If user exists and is valid, generate/store token and send email
+        if (user) {
+          const resetToken =
+            await this.passwordResetTokenService.generateAndStoreRsetAdminPasswordToken(
+              user
+            );
+          await this.passwordResetEmailService.sendPasswordResetEmailWithMessage(
             user,
             resetToken
           );

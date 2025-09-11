@@ -2,15 +2,18 @@ import { UserRepository } from "../repositories/UserRepository.js";
 import { User } from "../entities/User.js";
 import { logger } from "../utils/logger.js";
 import { createUnauthorizedError } from "../errors/index.js";
+import { Role } from "@/entities/Role.js";
 
 export interface CreateUserDto {
   fullName: string;
-  username: string;
+  userName: string;
   email: string;
+  createdBy?: User | null;
   company?: string | null;
   department?: string | null;
   password?: string;
   avatar?: string;
+  role?: Role | null;
 }
 
 export interface LoginDto {

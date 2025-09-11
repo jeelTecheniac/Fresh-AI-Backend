@@ -12,6 +12,19 @@ export const registerUserSchema = Joi.object({
   role: commonPatterns.uuid.optional(),
 }).strict();
 
+export const registeAdminUserSchema = Joi.object({
+  fullName: commonPatterns.name.required(),
+  userName: commonPatterns.username.required(),
+  email: commonPatterns.email.required(),
+  company: commonPatterns.name.required(),
+  department: commonPatterns.name.required(),
+  totalUserLicenses: commonPatterns.positiveInteger.optional(),
+  maxPersonas: commonPatterns.positiveInteger.optional(),
+  maxImageLimit: commonPatterns.positiveInteger.optional(),
+  maxDocumentUpload: commonPatterns.positiveInteger.optional(),
+  monthlyQueryLimit: commonPatterns.positiveInteger.optional(),
+}).strict();
+
 export const loginSchema = Joi.object({
   email: commonPatterns.email.required(),
   password: commonPatterns.password.required(),

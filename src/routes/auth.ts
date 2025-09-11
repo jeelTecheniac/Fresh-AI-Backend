@@ -7,7 +7,9 @@ import {
   forgotPasswordSchema,
   verifyResetPasswordToken,
   resetPasswordSchema,
+  registeAdminUserSchema,
 } from "../validation/schemas/user.schema.js";
+import { authMiddleware } from "@/middleware/auth.js";
 
 const router = Router();
 const userController = new UserController();
@@ -16,6 +18,16 @@ const userController = new UserController();
 router.post(
   "/create-super-admin-user",
   validateRequest(registerUserSchema, "body"),
+  async (req, res) => {
+    await userController.register(req, res);
+  }
+);
+
+// Admin registration
+router.post(
+  "/create-admin-user",
+  validateRequest(registeAdminUserSchema, "body"),
+  authMiddleware,
   async (req, res) => {
     await userController.register(req, res);
   }

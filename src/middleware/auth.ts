@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { TokenService } from "../services/TokenService.js";
+import { UserService } from "@/services/UserService.js";
 import { logger } from "../utils/logger.js";
+import { User } from "@/entities/User.js";
+import { createUnauthorizedError } from "./errorHandler.js";
+
+export type AuthRequest = Request & { user?: User };
 
 export const authMiddleware = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -20,12 +25,15 @@ export const authMiddleware = async (
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
     const tokenService = new TokenService();
+    const userService = new UserService();
 
     try {
       const decoded = tokenService.verifyJWT(token);
-
-      // Attach user info to request object
-      (req as any).user = decoded;
+      const user = await userService.getUserById(decoded.userId);
+      if (!user) {
+        throw createUnauthorizedError("User not found");
+      }
+      req.user = user;
 
       next();
     } catch (error) {

@@ -27,10 +27,9 @@ router.post(
 router.post(
   "/create-admin-user",
   validateRequest(registeAdminUserSchema, "body"),
-  // authMiddleware,
+  authMiddleware,
   async (req, res) => {
     await userController.register(req, res);
-    await userController.sendSetPasswordEmail(req, res);
   }
 );
 

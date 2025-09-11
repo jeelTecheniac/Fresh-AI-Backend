@@ -27,7 +27,7 @@ export class RoleService {
   async findByName(name: string): Promise<Role | null> {
     return this.roleRepository.findByName(name);
   }
-  async getRoleIdByName(roleName: string): Promise<string | null> {
+  async getRoleIdByName(roleName: string): Promise<Role | null> {
     const role = await this.roleRepository.findByName(roleName);
     return role || null;
   }

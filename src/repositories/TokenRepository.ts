@@ -121,19 +121,17 @@ export class TokenRepository {
       existingToken.token_expire = expiresAt;
       existingToken.verified_at = null; // Reset verification status
       return this.repository.save(existingToken);
-    } else {
-      // Create new token
-      const token = this.repository.create({
-        token: resetToken,
-        token_type: tokenType.RESET_PASSWORD,
-        token_expire: expiresAt,
-        user: user,
-      });
-
-      return this.repository.save(token);
     }
-  }
+    // Create new token
+    const token = this.repository.create({
+      token: resetToken,
+      token_type: tokenType.RESET_PASSWORD,
+      token_expire: expiresAt,
+      user: user,
+    });
 
+    return this.repository.save(token);
+  }
 
   async storeAdminSetPasswordToken(
     user: User,
@@ -144,7 +142,7 @@ export class TokenRepository {
     const existingToken = await this.repository.findOne({
       where: {
         user: { id: user.id },
-        token_type: tokenType.RESET_PASSWORD,
+        token_type: tokenType.USER_PASSWORD_SET,
       },
     });
 
@@ -154,17 +152,16 @@ export class TokenRepository {
       existingToken.token_expire = expiresAt;
       existingToken.verified_at = null; // Reset verification status
       return this.repository.save(existingToken);
-    } else {
-      // Create new token
-      const token = this.repository.create({
-        token: resetToken,
-        token_type: tokenType.USER_PASSWORD_SET,
-        token_expire: expiresAt,
-        user: user,
-      });
-
-      return this.repository.save(token);
     }
+    // Create new token
+    const token = this.repository.create({
+      token: resetToken,
+      token_type: tokenType.USER_PASSWORD_SET,
+      token_expire: expiresAt,
+      user: user,
+    });
+
+    return this.repository.save(token);
   }
   /**
    * Find password reset token by token string

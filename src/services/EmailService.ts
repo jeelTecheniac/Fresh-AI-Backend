@@ -39,11 +39,9 @@ export class EmailService {
   async sendAdminPasswordSetEmail(
     user: User,
     email: string,
-    resetToken: string,
-    userName: string
+    resetToken: string
   ): Promise<void> {
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
-    console.log("herereree")
 
     const emailOptions: EmailOptions = {
       to: email,
@@ -61,15 +59,12 @@ export class EmailService {
     }
   }
 
-
   /**
    * Send email via Gmail SMTP (App Password)
    */
   private async sendEmail(options: EmailOptions): Promise<void> {
     const user = process.env.GMAIL_USER;
     const pass = process.env.GMAIL_APP_PASSWORD;
-    console.log(user, "user");
-    console.log(pass, "password");
 
     if (!user || !pass) {
       throw new Error(
@@ -146,10 +141,9 @@ export class EmailService {
     `;
   }
 
-
   private generateAdminPasswordSetEmailHTML(
-    user:User,
-    resetUrl: string,
+    user: User,
+    resetUrl: string
   ): string {
     return `
     <!DOCTYPE html>
@@ -225,7 +219,6 @@ export class EmailService {
   `;
   }
 
-
   /**
    * Generate text content for password reset email
    */
@@ -255,7 +248,7 @@ Fresh AI Team
   }
 
   private generateAdminPasswordSetEmailText(
-    user:User,
+    user: User,
     loginUrl: string
   ): string {
     return `
@@ -272,8 +265,8 @@ Best,
 Join ${user.company} Research Platform!
 
 Details:
-- Name: ${user.name}
-- Username: ${user.username}
+- Name: ${user.fullName}
+- Username: ${user.userName}
 - Email: ${user.email}
 - Company: ${user.company}
 - Department: ${user.department}
@@ -289,5 +282,4 @@ Login Link: ${loginUrl}
 © 2025 Fresh AI. All rights reserved.
   `;
   }
-
 }

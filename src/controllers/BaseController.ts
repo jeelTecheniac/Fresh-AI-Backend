@@ -4,6 +4,7 @@ import {
   createSuccessResponse,
   createValidationError,
 } from "../middleware/validation.js";
+import { User } from "@/entities/User.js";
 
 export interface PaginationInfo {
   page: number;
@@ -12,12 +13,7 @@ export interface PaginationInfo {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
+  user?: User;
   validatedData?: any;
   pagination?: PaginationInfo;
 }
@@ -175,14 +171,14 @@ export abstract class BaseController {
    * Check if user is authenticated
    */
   protected isAuthenticated(req: AuthenticatedRequest): boolean {
-    return !!req.user && !!req.user.userId;
+    return !!req.user && !!req.user.id;
   }
 
   /**
    * Get user ID from authenticated request
    */
   protected getUserId(req: AuthenticatedRequest): string | null {
-    return req.user?.userId || null;
+    return req.user?.id || null;
   }
 
   /**
@@ -192,7 +188,7 @@ export abstract class BaseController {
     this.logger.info(`Request: ${operation}`, {
       method: req.method,
       url: req.originalUrl,
-      userId: req.user?.userId || "anonymous",
+      userId: req.user?.id || "anonymous",
       ip: req.ip,
       userAgent: req.get("User-Agent"),
     });
@@ -209,7 +205,7 @@ export abstract class BaseController {
     this.logger.error(`Error in ${operation}: ${error.message}`, {
       operation,
       error: error.stack,
-      userId: req?.user?.userId || "anonymous",
+      userId: req?.user?.id || "anonymous",
       url: req?.originalUrl,
       method: req?.method,
     });

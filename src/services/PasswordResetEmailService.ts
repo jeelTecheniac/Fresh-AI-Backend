@@ -40,8 +40,7 @@ export class PasswordResetEmailService {
       await this.emailService.sendAdminPasswordSetEmail(
         user,
         user.email,
-        resetToken,
-        user.fullName
+        resetToken
       );
       logger.info(
         `Password reset email with custom message sent to: ${user.email}`

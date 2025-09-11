@@ -15,7 +15,6 @@ import {
 } from "../errors/index.js";
 import { UserLImitService } from "@/services/UserLimitService.js";
 
-
 export class UserController extends BaseController {
   private userService: UserService;
   private roleService: RoleService;
@@ -44,9 +43,8 @@ export class UserController extends BaseController {
   async register(req: AuthenticatedRequest, res: Response): Promise<void> {
     await this.handleAsync(
       async () => {
-        // const id = req.user;
+        const CreatedByUSer = req.user;
         const role = await this.roleService.getRoleIdByName("admin");
-        console.log(role, "role");
         const data = {
           fullName: req.body.fullName,
           userName: req.body.userName,
@@ -55,15 +53,16 @@ export class UserController extends BaseController {
           department: req.body.department,
           password: req.body.password,
           avatar: req.body.avatar,
+          createdBy: CreatedByUSer || null,
           role: role,
         };
 
         const isTaken = await this.userService.isEmailTaken(req.body.email);
-        // if (isTaken) {
-        //   throw createConflictError("User with this email already exists");
-        // }
+        if (isTaken) {
+          throw createConflictError("User with this email already exists");
+        }
         const user = await this.userService.createUser(data);
-        console.log(user, "user");
+
         if (!user) {
           throw createBadRequestError("User creation failed");
         }
@@ -76,9 +75,19 @@ export class UserController extends BaseController {
           monthly_query_limit: req.body.monthlyQueryLimit,
           max_document_upload: req.body.maxDocumentUpload,
         };
-        console.log(LimitData, "LimitData");
-        const userLimit =
-          await this.UserLimitService.createUserLimit(LimitData);
+
+        await this.UserLimitService.createUserLimit(LimitData);
+
+        if (user) {
+          const adminSetUserPasswordToken =
+            await this.passwordResetTokenService.generateAndStoreRsetAdminPasswordToken(
+              user
+            );
+          await this.passwordResetEmailService.sendPasswordResetEmailWithMessage(
+            user,
+            adminSetUserPasswordToken
+          );
+        }
 
         return this.sanitizeData(user);
       },
@@ -336,47 +345,6 @@ export class UserController extends BaseController {
               user
             );
           await this.passwordResetEmailService.sendPasswordResetEmail(
-            user,
-            resetToken
-          );
-        }
-
-        return result;
-      },
-      req,
-      res,
-      "Forgot password"
-    );
-  }
-
-  /**
-   * set password - send set email (handles both initial request and resend)
-   */
-  async sendSetPasswordEmail(
-    req: AuthenticatedRequest,
-    res: Response
-  ): Promise<void> {
-    await this.handleAsync(
-      async () => {
-        // Validate user for password reset
-        const user = await this.userService.validateUserForPasswordReset(
-          req.body.email
-        );
-        console.log(user, 'user in send passwod');
-
-
-        // Always return success message for security (don't reveal if email exists)
-        const result = {
-          message: "If the email exists, a password reset link has been sent.",
-        };
-
-        // If user exists and is valid, generate/store token and send email
-        if (user) {
-          const resetToken =
-            await this.passwordResetTokenService.generateAndStoreRsetAdminPasswordToken(
-              user
-            );
-          await this.passwordResetEmailService.sendPasswordResetEmailWithMessage(
             user,
             resetToken
           );

@@ -97,6 +97,35 @@ export class UserController extends BaseController {
     );
   }
 
+  async resendAdminPasswordSetMail(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    await this.handleAsync(
+      async () => {
+        const userId = req.query.userId;
+        if (typeof userId !== "string") {
+          throw createBadRequestError("User ID must be a string");
+        }
+        const token =
+          await this.tokenDatabaseService.verifyResenMailToken(userId);
+
+        const adminSetUserPasswordToken =
+          await this.passwordResetTokenService.generateAndStoreRsetAdminPasswordToken(
+            token.user
+          );
+        await this.passwordResetEmailService.sendPasswordResetEmailWithMessage(
+          token.user,
+          adminSetUserPasswordToken
+        );
+        // const token = await this.tokenRepository.getTokenFromUserId();
+      },
+      req,
+      res,
+      "Resend the Admin Password set Mail"
+    );
+  }
+
   /**
    * User login
    */

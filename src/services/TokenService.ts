@@ -6,6 +6,8 @@ import {
   createValidationError,
 } from "../errors/index.js";
 
+import { TokenRepository } from "@/repositories/TokenRepository.js";
+
 export interface TokenPayload {
   userId: string;
   email: string;
@@ -29,6 +31,11 @@ export interface TokenPair {
 }
 
 export class TokenService {
+  private tokenRepository: TokenRepository;
+
+  constructor() {
+    this.tokenRepository = new TokenRepository();
+  }
   /**
    * Generate access token (24 hours)
    */

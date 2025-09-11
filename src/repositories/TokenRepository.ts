@@ -1,9 +1,8 @@
-import { Repository } from "typeorm";
+import { Repository, IsNull } from "typeorm";
 import { AppDataSource } from "../../data-source.js";
 import { Token } from "../entities/Token.js";
 import { User } from "../entities/User.js";
 import { tokenType } from "@/utils/tokenType.js";
-
 export class TokenRepository {
   private repository: Repository<Token>;
 
@@ -40,6 +39,21 @@ export class TokenRepository {
       where: {
         token: token,
         token_type: tokenType.REFRESH,
+      },
+      relations: ["user", "user.role"],
+    });
+  }
+
+  /**
+   * Find the token  from userID
+   */
+
+  async getTokenFromUserId(userID: string): Promise<Token | null> {
+    return this.repository.findOne({
+      where: {
+        user: { id: userID },
+        token_type: tokenType.USER_PASSWORD_SET,
+        verified_at: IsNull(),
       },
       relations: ["user", "user.role"],
     });

@@ -25,6 +25,10 @@ export const registeAdminUserSchema = Joi.object({
   monthlyQueryLimit: commonPatterns.positiveInteger.optional(),
 }).strict();
 
+export const resendAdminPasswordEmailSchema = Joi.object({
+  userId: Joi.string().required(),
+});
+
 export const loginSchema = Joi.object({
   email: commonPatterns.email.required(),
   password: commonPatterns.password.required(),

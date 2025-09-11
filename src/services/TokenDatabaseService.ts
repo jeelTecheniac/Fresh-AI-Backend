@@ -1,6 +1,6 @@
+import { createUnauthorizedError } from "@/middleware/errorHandler.js";
 import { TokenRepository } from "../repositories/TokenRepository.js";
 import { logger } from "../utils/logger.js";
-
 export class TokenDatabaseService {
   private tokenRepository: TokenRepository;
 
@@ -78,6 +78,19 @@ export class TokenDatabaseService {
       }
     } catch (error) {
       logger.error(`Token update error: ${error}`);
+      throw error;
+    }
+  }
+
+  async verifyResenMailToken(userId: string) {
+    try {
+      const response = await this.tokenRepository.getTokenFromUserId(userId);
+      if (!response) {
+        throw createUnauthorizedError("Token is Invalid");
+      }
+      return response;
+    } catch (error) {
+      logger.error(`Token is not there: ${error}`);
       throw error;
     }
   }

@@ -8,6 +8,7 @@ import {
   verifyResetPasswordToken,
   resetPasswordSchema,
   registeAdminUserSchema,
+  resendAdminPasswordEmailSchema,
 } from "../validation/schemas/user.schema.js";
 import { authMiddleware } from "@/middleware/auth.js";
 
@@ -20,6 +21,14 @@ router.post(
   validateRequest(registerUserSchema, "body"),
   async (req, res) => {
     await userController.register(req, res);
+  }
+);
+
+router.get(
+  "/resend-admin-password-set-mail",
+  validateRequest(resendAdminPasswordEmailSchema, "query"),
+  async (req, res) => {
+    await userController.resendAdminPasswordSetMail(req, res);
   }
 );
 

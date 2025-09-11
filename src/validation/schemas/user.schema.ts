@@ -26,7 +26,7 @@ export const registeAdminUserSchema = Joi.object({
 }).strict();
 
 export const resendAdminPasswordEmailSchema = Joi.object({
-  userId: Joi.string().required(),
+  userId: commonPatterns.isString.uuid().required(),
 });
 
 export const loginSchema = Joi.object({

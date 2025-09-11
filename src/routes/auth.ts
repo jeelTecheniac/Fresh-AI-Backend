@@ -25,8 +25,8 @@ router.post(
 );
 
 router.get(
-  "/resend-admin-password-set-mail",
-  validateRequest(resendAdminPasswordEmailSchema, "query"),
+  "/resend-admin-password-set-mail/:userId",
+  validateRequest(resendAdminPasswordEmailSchema, "params"),
   async (req, res) => {
     await userController.resendAdminPasswordSetMail(req, res);
   }

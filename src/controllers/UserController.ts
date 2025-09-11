@@ -103,9 +103,9 @@ export class UserController extends BaseController {
   ): Promise<void> {
     await this.handleAsync(
       async () => {
-        const userId = req.query.userId;
-        if (typeof userId !== "string") {
-          throw createBadRequestError("User ID must be a string");
+        const { userId } = req.params;
+        if (!userId) {
+          throw createBadRequestError("User ID is required");
         }
         const token =
           await this.tokenDatabaseService.verifyResenMailToken(userId);

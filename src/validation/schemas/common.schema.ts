@@ -32,6 +32,7 @@ export const commonPatterns = {
   isBoolean: Joi.boolean(),
   isNumber: Joi.number(),
   token: Joi.string(),
+  isString: Joi.string(),
 };
 
 export default commonPatterns;
